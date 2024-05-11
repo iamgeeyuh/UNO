@@ -1,4 +1,4 @@
-# Uno Game
+# Uno
 
 ## Description
 
@@ -29,5 +29,8 @@ To start a game, ensure that the server is running and then start the client app
 
 ## Features
 
-* Beautiful Uno cards created using Java Graphics
+* Uno cards created using Java Graphics
 ![Uno Cards](images/cards.png)
+
+* Real-time updates on opponent moves and hand
+![Enemy Cards](images/enemy_hand.png)
