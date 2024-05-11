@@ -2,7 +2,7 @@
 
 ## Description
 
-This Uno game is a Java-based application that allows users to play the classic Uno card game either locally or over a network. The game supports multiple players, with a simple and interactive GUI for an engaging gaming experience.
+This Uno game is a Java-based application that allows users to play the classic Uno card game either locally or over a network. The game supports up to four players, with a simple and interactive GUI for an engaging gaming experience.
 
 ## Installation
 
@@ -26,3 +26,8 @@ java Client
 
 ## Usage
 To start a game, ensure that the server is running and then start the client application. The GUI will guide you through the process of connecting to the server and starting a game. 
+
+## Features
+
+* Beautiful Uno cards created using Java Graphics
+![Uno Cards](images/cards.png)
