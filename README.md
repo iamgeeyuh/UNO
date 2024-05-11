@@ -43,6 +43,13 @@ Ensure the server is running before starting the client applications. Each clien
 
 * Interactive GUI: A clear and intuitive interface that displays personal hands, the discard pile, and updates from other players.
 
-* Uno cards created using Java Graphics
+* Uno cards designed using Java Graphics
 ![Uno Cards](images/cards.png)
 ![Uno Cards Back](images/cardBack.png)
+
+* Ready Page: A "Ready" page ensures that games begin only when all players have indicated their readiness.
+![Ready Page](images/ready.png)
+
+## Bugs/Room for Improvement
+
+* Only the current opponent's hand is visible on the top of the screen, as it was difficult to display cards sideways on the left and right sides of the screen.
