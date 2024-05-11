@@ -47,6 +47,9 @@ public class Client {
   private CardFront lastCard;
   private JLabel playerTurn;
 
+  private JPanel winPanel;
+  private JLabel winLabel;
+
   private GridBagConstraints gbcTop;
   private GridBagConstraints gbcCenter;
 
@@ -58,13 +61,14 @@ public class Client {
   private Scanner sin;
 
   private HashMap<String, PlayerReady> partyReady;
-  private HashSet<CardFront> playerHand;
-  private HashMap<String, ArrayList<CardBack>> players;
+  private HashMap<String, Integer> players;
 
   private GridBagConstraints gbc;
 
   private boolean inParty;
   private boolean inGame;
+
+  private boolean wild = false;
 
   private String currentPlayer;
 
@@ -226,16 +230,67 @@ public class Client {
     playerTurn = new JLabel();
     playerTurn.setBorder(BorderFactory.createEmptyBorder(0, 0, 50, 0));
     incFontSize(playerTurn, 10);
-    playerTurn.setText(currentPlayer + "'s' turn");
+    if (currentPlayer.equals(username)) {
+      playerTurn.setText("your turn");
+    } else {
+      playerTurn.setText(currentPlayer + "'s' turn");
+    }
     centerPanel.add(playerTurn);
     gbcCenter.gridx++;
 
     deck = new CardBack();
+    deck.addMouseListener(deckListener);
     centerPanel.add(deck, gbcCenter);
     gbcCenter.gridx++;
 
-    lastCard = new CardFront("blank");
     centerPanel.add(lastCard, gbcCenter);
+
+    frame.repaint();
+    frame.revalidate();
+  }
+
+  private void winUI(String winner) {
+    frame.remove(gamePanel);
+
+    winPanel = new JPanel();
+    winPanel.setBackground(backgroundColor);
+    winPanel.setLayout(new GridBagLayout());
+    gbc = new GridBagConstraints();
+    gbc.gridx = 0;
+    gbc.gridy = 0;
+    gbc.insets = new Insets(10, 10, 10, 10);
+    frame.add(winPanel);
+
+    winLabel = new JLabel();
+    incFontSize(winLabel, 70);
+    winLabel.setText(winner + " won!!");
+    winPanel.add(winLabel);
+
+    frame.repaint();
+    frame.revalidate();
+  }
+
+  private void chooseColorUI(String type) {
+    gbcTop.gridx = 0;
+    gbcTop.gridy = 0;
+
+    wild = true;
+
+    String[] colors = { "red", "orange", "blue", "purple" };
+    for (String color : colors) {
+      CardFront card = new CardFront(type, color);
+      card.addMouseListener(wildListener);
+      topHandPanel.add(card, gbcTop);
+      gbcTop.gridx++;
+    }
+
+    frame.repaint();
+    frame.revalidate();
+  }
+
+  private void removeChooseColorUI() {
+    topHandPanel.removeAll();
+    wild = false;
 
     frame.repaint();
     frame.revalidate();
@@ -358,6 +413,133 @@ public class Client {
     }
   }
 
+  private MouseListener playCardListener = new MouseListener() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+      CardFront card = (CardFront) e.getSource();
+      String[] cardParams = card.toString().split(" ");
+      String[] lastCardParams = lastCard.toString().split(" ");
+
+      if (currentPlayer.equals(username) && !wild) {
+        if (cardParams[1].equals("wild") || cardParams[1].equals("plusFour")) {
+          if (playerHandPanel.getComponentCount() == 1) {
+            sout.println("win");
+          }
+          chooseColorUI(cardParams[1]);
+          playerHandPanel.remove(card);
+
+          frame.repaint();
+          frame.revalidate();
+        } else if (
+          cardParams[0].equals(lastCardParams[0]) ||
+          cardParams[1].equals(lastCardParams[1])
+        ) {
+          if (playerHandPanel.getComponentCount() == 1) {
+            sout.println("win");
+          }
+
+          sout.println("play");
+          sout.println(card);
+          playerHandPanel.remove(card);
+
+          frame.repaint();
+          frame.revalidate();
+
+          if (cardParams[1].equals("plusTwo")) {
+            sout.println("plusDraw");
+            sout.println(2);
+          } else if (cardParams[1].equals("plusFour")) {
+            sout.println("plusDraw");
+            sout.println(4);
+          } else if (cardParams[1].equals("block")) {
+            sout.println("block");
+          } else if (cardParams[1].equals("reverse")) {
+            sout.println("reverse");
+          } else {
+            sout.println("none");
+          }
+        }
+      }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
+  };
+
+  private MouseListener wildListener = new MouseListener() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+      CardFront card = (CardFront) e.getSource();
+      String[] cardParams = card.toString().split(" ");
+
+      sout.println("play");
+      if (cardParams[0].equals("red")) {
+        cardParams[0] = "purple";
+      } else if (cardParams[0].equals("orange")) {
+        cardParams[0] = "blue";
+      } else if (cardParams[0].equals("blue")) {
+        cardParams[0] = "orange";
+      } else if (cardParams[0].equals("purple")) {
+        cardParams[0] = "red";
+      }
+      sout.println(cardParams[0] + " " + cardParams[1]);
+
+      frame.repaint();
+      frame.revalidate();
+
+      if (cardParams[1].equals("plusFour")) {
+        sout.println("plusDraw");
+        sout.println(4);
+      } else {
+        sout.println("none");
+      }
+
+      removeChooseColorUI();
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
+  };
+
+  private MouseListener deckListener = new MouseListener() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+      if (currentPlayer.equals(username) && !wild) {
+        sout.println("draw");
+      }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
+  };
+
   private class ServerProcesser extends Thread {
 
     @Override
@@ -379,9 +561,11 @@ public class Client {
               partyUI();
               inParty = true;
             } else {
-              String garb = sin.nextLine().trim();
+              sin.nextLine();
               currentPlayer = sin.nextLine().trim();
-              playerHand = new HashSet<>();
+              String lastCardString = sin.nextLine().trim();
+              String[] lastCardParams = lastCardString.split(" ");
+              lastCard = new CardFront(lastCardParams[1], lastCardParams[0]);
               gameUI();
               inGame = true;
             }
@@ -404,7 +588,7 @@ public class Client {
               }
             } else {
               if (!incomingUser.equals(username)) {
-                players.put(incomingUser, new ArrayList<>());
+                players.put(incomingUser, 0);
               }
               partyReady.put(
                 incomingUser,
@@ -427,20 +611,64 @@ public class Client {
 
               if (incomingUser.equals(username)) {
                 CardFront cardObj = new CardFront(cardParams[1], cardParams[0]);
-                playerHand.add(cardObj);
+                cardObj.addMouseListener(playCardListener);
+
                 playerHandPanel.add(cardObj, gbc);
                 gbc.gridx++;
+
                 frame.repaint();
                 frame.revalidate();
+
+                System.out.println(username);
+                System.out.println(incomingUser);
+                System.out.println(cardObj);
               } else {
-                ArrayList<CardBack> player = players.get(incomingUser);
-                CardBack cardObj = new CardBack();
-                player.add(cardObj);
-                topHandPanel.add(cardObj, gbcTop);
-                gbcTop.gridx++;
+                players.put(incomingUser, players.get(incomingUser) + 1);
+
+                if (incomingUser.equals(currentPlayer)) {
+                  topHandPanel.add(new CardBack(), gbcTop);
+                  gbcTop.gridx++;
+                }
+
                 frame.repaint();
                 frame.revalidate();
               }
+            } else if (line.equals("turn")) {
+              currentPlayer = sin.nextLine();
+              topHandPanel.removeAll();
+
+              if (currentPlayer.equals(username)) {
+                playerTurn.setText("your turn");
+              } else {
+                playerTurn.setText(currentPlayer + "'s' turn");
+                gbcTop.gridx = 0;
+                gbcTop.gridy = 0;
+                for (int i = 0; i < players.get(currentPlayer); i++) {
+                  topHandPanel.add(new CardBack(), gbcTop);
+                  gbcTop.gridx++;
+                }
+                frame.repaint();
+                frame.revalidate();
+              }
+            } else if (line.equals("newCard")) {
+              String card = sin.nextLine().trim();
+              String[] cardParams = card.split(" ");
+              CardFront cardObj = new CardFront(cardParams[1], cardParams[0]);
+
+              centerPanel.remove(lastCard);
+              lastCard = cardObj;
+              centerPanel.add(lastCard, gbcCenter);
+
+              frame.repaint();
+              frame.revalidate();
+            } else if (line.equals("play")) {
+              String incomingUser = sin.nextLine();
+              if (!incomingUser.equals(username)) {
+                players.put(incomingUser, players.get(incomingUser) - 1);
+              }
+            } else if (line.equals("win")) {
+              String winner = sin.nextLine();
+              winUI(winner);
             }
           }
         }
@@ -478,12 +706,9 @@ class CardFront extends JPanel {
 
   private Graphics2D g2d;
 
-  private boolean isSelected = false;
-  private static CardFront selectedCard = null;
-
   public CardFront(String type, String color) {
     cardType = type;
-    if (type.equals("wild") || type.equals("plusFour")) {
+    if (color.equals("black")) {
       cardColor = Color.BLACK;
     } else if (color.equals("red")) {
       cardColor = RED;
@@ -494,39 +719,11 @@ class CardFront extends JPanel {
     } else if (color.equals("purple")) {
       cardColor = PURPLE;
     }
-
-    addMouseListener(
-      new MouseAdapter() {
-        @Override
-        public void mouseClicked(MouseEvent e) {
-          if (isSelected) {
-            deselect();
-          } else {
-            select();
-          }
-        }
-      }
-    );
   }
 
   public CardFront(String type) {
     cardType = type;
     cardColor = Color.BLACK;
-  }
-
-  private void select() {
-    if (selectedCard != null) {
-      selectedCard.deselect();
-    }
-    isSelected = true;
-    selectedCard = this;
-
-    setBorder(BorderFactory.createLineBorder(Color.red, 3));
-  }
-
-  private void deselect() {
-    isSelected = false;
-    setBorder(BorderFactory.createLineBorder(Color.black)); 
   }
 
   @Override
@@ -732,6 +929,9 @@ class CardFront extends JPanel {
       g2d.setColor(colors[i]);
       g2d.fillArc(x, y, diameter, diameter, i * 90, 90);
     }
+
+    g2d.setColor(Color.BLACK);
+    g2d.drawOval(x, y, diameter, diameter);
   }
 
   private void drawNumCard() {

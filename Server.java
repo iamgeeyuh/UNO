@@ -34,7 +34,9 @@ class ProcessConnection extends Thread {
   private String ready;
   static boolean gameStart;
 
+  static boolean reverse = false;
   static int currentPlayer = 0;
+  static CardFront currentCard;
 
   public ProcessConnection(Socket socket) {
     this.socket = socket;
@@ -83,19 +85,76 @@ class ProcessConnection extends Thread {
                 String[] message = { "200" };
                 connection.sendMessage(message);
               }
+              gameStart = true;
               nextTurn();
               createDeck();
+              currentCard = deck.remove(deck.size() - 1);
+              for (ProcessConnection connection : connections) {
+                String[] message = { currentCard.toString() };
+                connection.sendMessage(message);
+              }
               for (ProcessConnection connection : connections) {
                 for (int i = 0; i < 7; i++) {
                   connection.drawCard();
                 }
               }
             }
+          } else if (gameStart) {
+            if (line.equals("play")) {
+              String[] cardParams = sin.nextLine().split(" ");
+              currentCard = new CardFront(cardParams[1], cardParams[0]);
+
+              String action = sin.nextLine();
+
+              if (action.equals("plusDraw")) {
+                int draws = Integer.valueOf(sin.nextLine());
+                for (int i = 0; i < draws; i++) {
+                  connections.get(currentPlayer).drawCard();
+                }
+                nextTurn();
+              } else if (action.equals("block")) {
+                nextTurn();
+              } else if (action.equals("reverse")) {
+                System.out.println(currentPlayer);
+                reverse = !reverse;
+                if (reverse) {
+                  currentPlayer -= 2;
+                  if (currentPlayer < 0) {
+                    currentPlayer = connections.size() + currentPlayer;
+                  }
+                } else {
+                  currentPlayer += 2;
+                  if (currentPlayer >= connections.size()) {
+                    currentPlayer -= connections.size();
+                  }
+                }
+                System.out.println(currentPlayer);
+              }
+              nextTurn();
+
+              String[] message = {
+                "newCard",
+                currentCard.toString(),
+                "play",
+                username,
+              };
+              for (ProcessConnection connection : connections) {
+                connection.sendMessage(message);
+              }
+            } else if (line.equals("draw")) {
+              drawCard();
+              nextTurn();
+            } else if (line.equals("win")) {
+              String[] message = { "win", username };
+              for (ProcessConnection connection : connections) {
+                connection.sendMessage(message);
+              }
+            }
           }
         }
+        sin.close();
+        socket.close();
       }
-      sin.close();
-      socket.close();
     } catch (IOException e) {
       System.out.println("Could not get input from client");
     }
@@ -146,21 +205,32 @@ class ProcessConnection extends Thread {
   }
 
   private void drawCard() {
+    if (deck.size() == 0) {
+      createDeck();
+    }
+
     CardFront card = deck.remove(deck.size() - 1);
+    String[] message = { "draw", username, card.toString() };
     for (ProcessConnection connection : connections) {
-      String[] message = { "draw", username, card.toString() };
       connection.sendMessage(message);
     }
   }
 
   private void nextTurn() {
-    if (currentPlayer == connections.size()) {
-      currentPlayer = 0;
-    }
     for (ProcessConnection connection : connections) {
       String[] message = { "turn", connections.get(currentPlayer).username };
       connection.sendMessage(message);
     }
-    currentPlayer++;
+    if (!reverse) {
+      currentPlayer++;
+      if (currentPlayer == connections.size()) {
+        currentPlayer = 0;
+      }
+    } else {
+      currentPlayer--;
+      if (currentPlayer == -1) {
+        currentPlayer = connections.size() - 1;
+      }
+    }
   }
 }
