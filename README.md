@@ -52,4 +52,6 @@ Ensure the server is running before starting the client applications. Each clien
 
 ## Bugs/Room for Improvement
 
-* Only the current opponent's hand is visible on the top of the screen, as it was difficult to display cards sideways on the left and right sides of the screen.
+* Limited Card Display Options: Only the current opponent's hand is visible at the top of the screen. Displaying cards sideways on the left and right sides of the screen proved challenging and is an area for potential improvement.
+
+* No Plus Stacking: The game does not support stacking of +2 and +4 cards. When these cards are played, the effects are applied immediately to the next player, even if they also have a +2 or +4 card to play in response.
